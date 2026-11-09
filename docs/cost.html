@@ -27,6 +27,9 @@
   <h2>Cost composition per warehouse (stacked bar, not a bar or a pie)</h2>
   <p>A plain bar would show total cost but hide the transport/storage split; a pie per warehouse would show the split but make comparing warehouses to each other hard (comparing angles across three separate pies is a known weak reading task). A <strong>stacked bar</strong> shows both at once: bar height = total cost, segment size = which lever to pull.</p>
   <canvas id="stackedChart" height="280"></canvas>
+  <h2>Transport cost per tonne (the lever that really differs)</h2>
+  <p>Storage costs the same per tonne in every warehouse, so the real difference between warehouses is how much transport costs for each tonne delivered.</p>
+  <canvas id="perTonneChart" height="200"></canvas>
 
   <h2>Highest-cost individual routes (table, not a chart)</h2>
   <p>A manager negotiating a specific route needs the exact number, not a visual estimate — same reasoning this course used for every other "exact figures a person will act on" table (e.g. the offer table in Smart Internship Match).</p>
@@ -61,6 +64,20 @@ fetch('data/cost.json')
         plugins: { title: { display: true, text: 'Total cost per warehouse, split by lever' } },
         scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: 'EUR / year' } } },
       },
+    });
+
+        const storageRate = data.assumptions.storage_cost_eur_per_tonne_year;
+    new Chart(document.getElementById('perTonneChart'), {
+      type: 'bar',
+      data: {
+        labels: byWh.map(w => w.warehouse),
+        datasets: [{
+          label: 'Transport cost per tonne (EUR)',
+          data: byWh.map(w => Math.round(w.transport_cost_eur / (w.storage_cost_eur / storageRate) * 10) / 10),
+          backgroundColor: '#0d7c9e'
+        }],
+      },
+      options: { indexAxis: 'y', plugins: { legend: { display: false }, title: { display: true, text: 'Transport cost per tonne delivered (EUR/tonne)' } } },
     });
 
     const tbody = document.querySelector('#topLinksTable tbody');
